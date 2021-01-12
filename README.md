@@ -166,6 +166,8 @@ gimp SEG_S_4.xbm
 
 Edit the bits. Note this is Black and White. No colour just 1 bit per pixel.
 
+Make sure you have no white space around the image. Use the Crop function to trim the image before saving.
+
 Don't do 'File save'
 
 You need to **Export** the file as a xbm file or gimp will save it in it's own internal gimp file format.
