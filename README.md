@@ -36,12 +36,14 @@ As it is it will display the MEDIUM display. If you remove the '//' at the start
 You can use both MEDIUM and SMALL displays in the same application. Simply include both SEG_S.h and SEG_M.h
 
 ## Usage
-Simply copu the SEG_S.h and SEG_S.cpp (and/or SEG_M.h and SEG_M.cpp) files in to your project dir.
+Simply copy the SEG_S.h and SEG_S.cpp (and/or SEG_M.h and SEG_M.cpp) files in to your project dir.
+
+I am looking to set this up as a library module but have not had time yet.
 
 Both MEDIUM and SMALL have the same code but they are kept separate to reduce the size if only one is used.
 
-## API
-### SegmentDisplaySmall &  SegmentDisplayMedium
+# API
+## SegmentDisplaySmall &  SegmentDisplayMedium
 
 ```C++
 void init(TFT_eSPI tft, int x, int y, int fg, int bg);
@@ -66,4 +68,50 @@ Draw an an individual Seven Segment character.
   * Unrecognised values are displayed as a '-'
 
 Note - SEGMENT_ALL_OFF, SEGMENT_COLON_ON and SEGMENT_COLON_OFF are defined in both SEG_M.h and SEG_S.h.
+
+There are get?() and set?() methods for colour and position attributes.
+
+## ClockDisplaySmall &  ClockDisplayMedium
+
+```C++
+void init(TFT_eSPI tft, int x, int y, int fg, int bg, int digitCount, const int digitOffset[]);
+```
+Define an N digit display.
+* TFT_eSPI tft - Is the display object. This can be the TFT_eSPI class or a sprite class.
+* int x - The x position of the first (Left character)
+* int y - The y position of the first (Left character)
+* int fg - The foreground colour, displayed when a segment is ON.
+* int bg - The background colour, displayed when a segment is OFF.
+* int digitCount - The number of characters in the display 1..5
+* int digitOffset[] - A list of offsets. The first is the gap between the first and second character. Negative values can be used to cause an overlap.
+  * digitOffset[0] - gap between the first and second
+  * digitOffset[1] - gap between the second and third
+  * digitOffset[2] - gap between the third and forth
+  * digitOffset[2] - gap between the forth and fith
+  * etc.
+
+```C++
+    void setValue(int pos, int val);
+```
+Set the value of a specific digit.
+* int pos - The specific digit. First is 0, this is range checked and is ignored if not in range.
+* int val - This is the same value as drawSegment(int value).
+
+```C++
+    int getValue(int pos);
+```
+Get the value of a specific digit.
+* int pos - The specific digit. First is 0, this is range checked and is -1 if not in range.
+
+```C++
+    bool setColon(int pos, bool val);
+```
+This sets the specific character value as a Colon ':'.
+
+* int pos - The specific digit. First is 0, this is range checked and is ignored if not in range.
+* bool val - true will set the colon ON, false will set the colon OFF.
+
+Returns: The inverted value (!val).
+
+
 
