@@ -1,12 +1,10 @@
 # WIO-Terminal-SevenSegDisp
 
-Seven Segment (SS) Display for Arduino/WIO-Terminal.
+Slanting Seven Segment Display for Arduino/WIO-Terminal.
 
-Includes classes for individual SS displays and a Group of diaplays.
+Includes classes for individual characterc and a Group of N characters.
 
-Includes data for display 0..9 A..F and a colon.
-
-Includes a Clock display.
+Includes options for displaying 0..9 A..F and a colon.
 
 ## Medium
 A medium sized display.
@@ -27,7 +25,7 @@ ClockDisplaySmall
 ## Example
 SevenSegDisp.ino is an example of how it is used.
 
-At the top of the file ther is a
+At the top of the file there is a
 ```C++
 //#define TEST_SMALL__ X
 ```
@@ -113,5 +111,91 @@ This sets the specific character value as a Colon ':'.
 
 Returns: The inverted value (!val).
 
+# BITMAPS
+To edit the basic shapes for each segment:
 
+## Export
+Export a section to a 'xbm' file. The following example is from the SEG_S.h file and is segment 4 from the small characters.
 
+```c++
+#define SEG_S_4_width 31
+#define SEG_S_4_height 8
+const unsigned char SEG_S_4_bits[] = {
+    0xe0, 0x00, 0x80, 0x03, 0xf0, 0x03, 0xe0, 0x07, 0xf8, 0xff, 0xff, 0x0f,
+    0xfc, 0xff, 0xff, 0x1f, 0xfe, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xff, 0x7f,
+    0xff, 0xff, 0xff, 0x7f, 0xfe, 0xff, 0xff, 0x1f};
+```
+```txt
+   ----01----
+   |        |
+   06       02
+   |        |
+   ----07----
+   |        |
+   05       03
+   |        |
+   ----04---- <-- SEG_S_4
+```
+
+All segment names start with SEG_ followed by M_ or S_ (for Medium or Small) followed by the segment number.
+
+SEG_S_8 is the Colon bitmap.
+
+Each segment has 2 #defines
+* SEG_x_n_width
+* SEG_x_n_height
+
+and a
+* const unsigned char' array SEG_x_n_bits[]
+
+You need to include all 3 in your export:
+
+* SEG_S_4_width
+* SEG_S_4_height
+* SEG_S_4_bits[]
+
+So create a file called SEG_S_4.xbm and paste the values in to it.
+
+## Edit
+
+Open the file in Gimp.
+
+```bash
+gimp SEG_S_4.xbm
+```
+
+Edit the bits. Note this is Black and White. No colour just 1 bit per pixel.
+
+Don't do 'File save'
+
+You need to **Export** the file as a xbm file or gimp will save it in it's own internal gimp file format.
+
+Use 'File Export as' or File Overwrite'
+
+## Import
+Open the saved xbm file in a text editor!
+
+Copy the text and replace the original text you exported in the SEG_S.h (or SEG_M.h) file.
+
+## Finally
+
+Gimp exports the bitmaps as a 'static unsigned char' value. This should be 'const unsigned char'.
+
+Change:
+```c++
+#define SEG_S_4_width 31
+#define SEG_S_4_height 8
+static unsigned char SEG_S_4_bits[] = {
+    0xe0, 0x00, 0x80, 0x03, 0xf0, 0x03, 0xe0, 0x07, 0xf8, 0xff, 0xff, 0x0f,
+    0xfc, 0xff, 0xff, 0x1f, 0xfe, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xff, 0x7f,
+    0xff, 0xff, 0xff, 0x7f, 0xfe, 0xff, 0xff, 0x1f};
+```
+To:
+```c++
+#define SEG_S_4_width 31
+#define SEG_S_4_height 8
+const unsigned char SEG_S_4_bits[] = {
+    0xe0, 0x00, 0x80, 0x03, 0xf0, 0x03, 0xe0, 0x07, 0xf8, 0xff, 0xff, 0x0f,
+    0xfc, 0xff, 0xff, 0x1f, 0xfe, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xff, 0x7f,
+    0xff, 0xff, 0xff, 0x7f, 0xfe, 0xff, 0xff, 0x1f};
+```
