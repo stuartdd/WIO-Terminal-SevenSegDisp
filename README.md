@@ -1,58 +1,69 @@
-# WIO-Terminal-Digital-Clock
+# WIO-Terminal-SevenSegDisp
 
-A Full function Digital Clock for the WIO-Terminal
+Seven Segment (SS) Display for Arduino/WIO-Terminal.
 
-This project is compatible with the Arduino project structure and the Platform IO project structure.
+Includes classes for individual SS displays and a Group of diaplays.
 
-While Platform IO is better and quicker as a development IDE, Arduino is the standard. Whatever you build make sure it builds in an Arduino and Platform IO IDE. For Arduino just open the .ino file in the 'src' directory (of the same name).
+Includes data for display 0..9 A..F and a colon.
 
-See the 'platformio.ini' property 'src_dir' below.
+Includes a Clock display.
 
-## PlatformIO Warning
+## Medium
+A medium sized display.
+### Includes
+#include "SEG_M.h"
+### Classes
+SegmentDisplayMedium
+ClockDisplayMedium
 
-### Build check
+## Small
+A smaller display
+### Includes
+#include "SEG_S.h"
+### Classes
+SegmentDisplaySmall
+ClockDisplaySmall
 
-If you have problems getting the build working please make sure you can build and upload using the Arduino IDE and you have followed all of the instructions for adding libraried to the Arduino project.
+## Example
+SevenSegDisp.ino is an example of how it is used.
 
-For PlatformIO development you MAY need to set the **lib_extra_dirs** value in the platformio.ini file:
-
-From:
-
-```bash
-lib_extra_dirs = ~/Arduino/libraries
+At the top of the file ther is a
+```C++
+//#define TEST_SMALL__ X
 ```
+As it is it will display the MEDIUM display. If you remove the '//' at the start of the line it will display the SMALL display.
 
-To an absolute path. For example:
+You can use both MEDIUM and SMALL displays in the same application. Simply include both SEG_S.h and SEG_M.h
 
-```bash
-lib_extra_dirs = home/myUserId/Arduino/libraries
+## Usage
+Simply copu the SEG_S.h and SEG_S.cpp (and/or SEG_M.h and SEG_M.cpp) files in to your project dir.
+
+Both MEDIUM and SMALL have the same code but they are kept separate to reduce the size if only one is used.
+
+## API
+### SegmentDisplaySmall &  SegmentDisplayMedium
+
+```C++
+void init(TFT_eSPI tft, int x, int y, int fg, int bg);
 ```
+Define an individual Seven Segment character.
+* TFT_eSPI tft - Is the display object. This can be the TFT_eSPI class or a sprite class.
+* int x - The x position
+* int y - The y position
+* int fg - The foreground colour, displayed when a segment is ON.
+* int bg - The background colour, displayed when a segment is OFF.
 
-This was the only way I could get it to compile.
-
-### platformio.ini basic
-
-```bash
-[platformio]
-src_dir = Digital-Clock
-
-[env:WIO-Terminal-Clock]
-platform = atmelsam
-board = seeed_wio_terminal
-framework = arduino
-lib_extra_dirs = ~/Arduino/libraries
-
-platform_packages = framework-arduino-samd-seeed@https://github.com/Seeed-Studio/ArduinoCore-samd.git
-lib_ldf_mode = deep
+```C++
+void drawSegment(int value);
 ```
-### C++ Code Formatting
-Go to Settings and search for 'C_Cpp' and look for:
-```json
-C_Cpp:Clang_format_fallback style
-```
-Replace 'Visual Studio' with 
-```json
-{BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, TabWidth: 4, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false, ColumnLimit: 0, AccessModifierOffset: -4 }
-```
-# The Project
+Draw an an individual Seven Segment character.
+* int value - The character to draw:
+  * 0..9 for decimal characters
+  * 10..15 for hex characters A,B,C,D,E and F
+  * SEGMENT_ALL_OFF (127) for ALL segments OFF
+  * SEGMENT_COLON_ON (128) for the : character ON
+  * SEGMENT_COLON_OFF (129) for the : character OFF
+  * Unrecognised values are displayed as a '-'
+
+Note - SEGMENT_ALL_OFF, SEGMENT_COLON_ON and SEGMENT_COLON_OFF are defined in both SEG_M.h and SEG_S.h.
 
