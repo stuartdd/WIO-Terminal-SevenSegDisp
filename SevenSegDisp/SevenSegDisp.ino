@@ -1,4 +1,4 @@
-//#define TEST_SMALL__ X
+// #define TEST_SMALL__ X
 
 #include "Free_Fonts.h"
 #include "TFT_eSPI.h"
@@ -11,6 +11,8 @@
 long millisNow = 0;
 long colonTimer = 0;
 long updateTimer = 0;
+long colourTimer = 0;
+long countTimer = 0;
 long incTimer = 0;
 bool colonOn = false;
 int countMax = 0;
@@ -32,9 +34,14 @@ SegmentDisplayMedium segErr = SegmentDisplayMedium();
 
 static TFT_eSPI dispBuffer;  // The screen (This should be a sprite but there is not enough memory)
 
-int bgColor = dispBuffer.color565(0, 255, 255);
-int fgColor = dispBuffer.color565(200, 0, 0);
-int offColor = dispBuffer.color565(0, 200, 200);
+int bgColor = dispBuffer.color565(0, 0, 255);
+
+int fgColor1 = dispBuffer.color565(255, 0, 0);
+int offColor1 = dispBuffer.color565(255, 200, 200);
+int fgColor2 = dispBuffer.color565(0, 255, 0);
+int offColor2 = dispBuffer.color565(0, 100, 0);
+
+bool colour1 = true;
 
 void setup() {
     pinMode(WIO_LIGHT, INPUT);
@@ -53,26 +60,30 @@ void setup() {
     dispBuffer.setTextColor(TFT_BLACK);
     dispBuffer.setFreeFont(FF28);
 
-    clockDisplay.init(dispBuffer, 10, 10, fgColor, offColor, 5, offsets);
+    clockDisplay.init(dispBuffer, 10, 10, fgColor1, offColor1, 5, offsets);
     clockDisplay.setValue(0, SEGMENT_ALL_OFF);
     clockDisplay.setValue(1, 0);
     clockDisplay.setColon(2, colonOn);
     clockDisplay.setValue(3, 0);
     clockDisplay.setValue(4, 0);
 
-    clockDisplay.update();
+    clockDisplay.draw();
 
-    segErr.init(dispBuffer, 120, 120, fgColor, offColor);
-    segErr.drawSegment(SEVEN_SEG_MAP_MAX);
+    segErr.init(dispBuffer, 120, 120, fgColor1, offColor1);
+    segErr.setValue(SEVEN_SEG_MAP_MAX);
+    segErr.draw();
 
-    colOn.init(dispBuffer, 160, 120, fgColor, offColor);
-    colOn.drawSegment(SEGMENT_COLON_ON);
+    colOn.init(dispBuffer, 160, 120, fgColor1, offColor1);
+    colOn.setValue(SEGMENT_COLON_ON);
+    colOn.draw();
 
-    colOff.init(dispBuffer, 200, 120, fgColor, offColor);
-    colOff.drawSegment(SEGMENT_COLON_OFF);
+    colOff.init(dispBuffer, 200, 120, fgColor1, offColor1);
+    colOff.setValue(SEGMENT_COLON_OFF);
+    colOff.draw();
 
-    segOff.init(dispBuffer, 250, 120, fgColor, offColor);
-    segOff.drawSegment(SEGMENT_ALL_OFF);
+    segOff.init(dispBuffer, 250, 120, fgColor1, offColor1);
+    segOff.setValue(SEGMENT_ALL_OFF);
+    segOff.draw();
 
 }  // END setup
 
@@ -103,6 +114,11 @@ void loop() {
         colonOn = clockDisplay.setColon(2, colonOn);
     }
 
+    if (millisNow > countTimer) {
+        countTimer = millisNow + 5000;
+        countMax = 0;
+    }
+
     if (millisNow > incTimer) {
         incTimer = millisNow + 100;
         int v = clockDisplay.getValue(4);
@@ -117,7 +133,6 @@ void loop() {
                 v = v + 1;
                 if (v > 15) {
                     clockDisplay.setValue(1, 0);
-                    countMax = 0;
                 } else {
                     clockDisplay.setValue(1, v);
                 }
@@ -129,9 +144,31 @@ void loop() {
         }
     }
 
+    if (millisNow > colourTimer) {
+        colourTimer = millisNow + 6000;
+        if (colour1) {
+            clockDisplay.setFgColor(fgColor1);
+            clockDisplay.setBgColor(offColor1);
+            colOff.setFgColor(fgColor1);
+            colOff.setBgColor(offColor1);
+            segErr.setFgColor(fgColor1);
+            segErr.setBgColor(offColor1);
+        } else {
+            clockDisplay.setFgColor(fgColor2);
+            clockDisplay.setBgColor(offColor2);
+            colOff.setFgColor(fgColor2);
+            colOff.setBgColor(offColor2);
+            segErr.setFgColor(fgColor2);
+            segErr.setBgColor(offColor2);
+        }
+        colOff.draw();
+        segErr.draw();
+        colour1 = !colour1;
+    }
+
     if (millisNow > updateTimer) {
         updateTimer = millisNow + 100;
-        int count = clockDisplay.update();
+        int count = clockDisplay.draw();
         if (count > countMax) {
             countMax = count;
         }

@@ -40,70 +40,78 @@ SegmentDisplaySmall::~SegmentDisplaySmall() {
 }
 
 void ClockDisplaySmall::init(TFT_eSPI tft, int x, int y, int fg, int bg, int digitCount, const int digitOffset[]) {
-    setTFT(tft);
+    _tft = tft;
     if (digitCount >= SEGMENT_COUNT) {
         digits = SEGMENT_COUNT;
     } else {
         digits = digitCount;
     }
 
-    for (int i = 0; i < SEGMENT_COUNT; i++) {
-        values[i] = SEGMENT_UNDEFINED;
-        currentValues[i] = SEGMENT_UNDEFINED;
-    }
     int xPos = x;
     for (int i = 0; i < digits; i++) {
-        values[i] = SEGMENT_DEFAULT;
-        currentValues[i] = SEGMENT_UPDATE;
         segments[i] = SegmentDisplaySmall();
         segments[i].init(tft, xPos, y, fg, bg);
         xPos = xPos + (SEGMENT_WIDTH + digitOffset[i]);
     }
 }
 
-int ClockDisplaySmall::update() {
+int ClockDisplaySmall::draw() {
     int count = 0;
     for (int i = 0; i < digits; i++) {
-        if (values[i] != currentValues[i]) {
-            currentValues[i] = values[i];
-            segments[i].drawSegment(currentValues[i]);
-            count++;
-        }
+        count = count + segments[i].draw();
     }
     return count;
 }
 
-void ClockDisplaySmall::setTFT(TFT_eSPI tft) {
-    _tft = tft;
+int ClockDisplaySmall::invalidate() {
+    for (int i = 0; i < digits; i++) {
+        segments[i].invalidate();
+    }
 }
 
-TFT_eSPI ClockDisplaySmall::getTFT() {
-    return _tft;
+void ClockDisplaySmall::setFgColor(int c) {
+    for (int i = 0; i < digits; i++) {
+        segments[i].setFgColor(c);
+    }
+}
+
+void ClockDisplaySmall::setBgColor(int c) {
+    for (int i = 0; i < digits; i++) {
+        segments[i].setBgColor(c);
+    }
+}
+
+int ClockDisplaySmall::getFgColor() {
+    return segments[0].getFgColor();
+}
+
+int ClockDisplaySmall::getBgColor() {
+    return segments[0].getBgColor();
 }
 
 void ClockDisplaySmall::setValue(int pos, int val) {
     if ((pos >= 0) && (pos < digits)) {
-        values[pos] = val;
+        segments[pos].setValue(val);
     }
 }
 
 int ClockDisplaySmall::getValue(int pos) {
     if ((pos >= 0) && (pos < digits)) {
-        return values[pos];
+        return segments[pos].getValue();
     }
     return -1;
 }
 
 bool ClockDisplaySmall::setColon(int pos, bool val) {
     if ((pos >= 0) && (pos < digits)) {
-        values[pos] = val ? SEGMENT_COLON_ON : SEGMENT_COLON_OFF;
-        return !val;
+        segments[pos].setValue(val ? SEGMENT_COLON_ON : SEGMENT_COLON_OFF);
     }
     return false;
 }
 
 void SegmentDisplaySmall::init(TFT_eSPI tft, int x, int y, int fg, int bg) {
-    setTFT(tft);
+    _tft = tft;
+    setValue(SEGMENT_UNDEFINED);
     setFgColor(fg);
     setBgColor(bg);
     setPosition(x, y);
@@ -119,8 +127,12 @@ void SegmentDisplaySmall::drawSegmentInternal(int mask) {
     _tft.drawXBitmap(xPos + SEG_S_7_X, yPos + SEG_S_7_Y, SEG_S_7_bits, SEG_S_7_width, SEG_S_7_height, ((mask & 0x40) != 0) ? fgColor : bgColor);
 }
 
-void SegmentDisplaySmall::drawSegment(int value) {
-    switch (value) {
+int SegmentDisplaySmall::draw() {
+    if ((segValue == segValueCurrent) || (segValue == SEGMENT_UNDEFINED)) {
+        return 0;
+    }
+    segValueCurrent = segValue;
+    switch (segValue) {
     case SEGMENT_COLON_ON:
         _tft.drawXBitmap(xPos + SEG_S_8_X, yPos + SEG_S_8_Y, SEG_S_8_bits, SEG_S_8_width, SEG_S_8_height, fgColor);
         break;
@@ -131,30 +143,35 @@ void SegmentDisplaySmall::drawSegment(int value) {
         drawSegmentInternal(0);
         break;
     default:
-        if ((value >= 0) && (value < SEVEN_SEG_MAP_MAX)) {
-            drawSegmentInternal(sevenSegmentMap[value]);
+        if ((segValue >= 0) && (segValue < SEVEN_SEG_MAP_MAX)) {
+            drawSegmentInternal(sevenSegmentMap[segValue]);
         } else {
             drawSegmentInternal(SEVEN_SEG_MAP_ERR);
         }
     }
+    return 1;
 }
 
-void SegmentDisplaySmall::setTFT(TFT_eSPI tft) {
-    _tft = tft;
+int SegmentDisplaySmall::invalidate() {
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
-TFT_eSPI SegmentDisplaySmall::getTFT() {
-    return _tft;
+void SegmentDisplaySmall::setValue(int val) {
+    segValue = val;
 }
 
-int SegmentDisplaySmall::setFgColor(int color) {
+int SegmentDisplaySmall::getValue() {
+    return segValue;
+}
+
+void SegmentDisplaySmall::setFgColor(int color) {
     fgColor = color;
-    return getFgColor();
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
-int SegmentDisplaySmall::setBgColor(int color) {
+void SegmentDisplaySmall::setBgColor(int color) {
     bgColor = color;
-    return getBgColor();
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
 int SegmentDisplaySmall::getFgColor() {
@@ -176,5 +193,7 @@ int SegmentDisplaySmall::getYPos() {
 void SegmentDisplaySmall::setPosition(int x, int y) {
     xPos = x;
     yPos = y;
+    segValueCurrent = SEGMENT_UPDATE;
 }
+
 #endif

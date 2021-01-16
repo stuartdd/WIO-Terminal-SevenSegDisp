@@ -40,70 +40,78 @@ SegmentDisplayMedium::~SegmentDisplayMedium() {
 }
 
 void ClockDisplayMedium::init(TFT_eSPI tft, int x, int y, int fg, int bg, int digitCount, const int digitOffset[]) {
-    setTFT(tft);
+    _tft = tft;
     if (digitCount >= SEGMENT_COUNT) {
         digits = SEGMENT_COUNT;
     } else {
         digits = digitCount;
     }
 
-    for (int i = 0; i < SEGMENT_COUNT; i++) {
-        values[i] = SEGMENT_UNDEFINED;
-        currentValues[i] = SEGMENT_UNDEFINED;
-    }
     int xPos = x;
     for (int i = 0; i < digits; i++) {
-        values[i] = SEGMENT_DEFAULT;
-        currentValues[i] = SEGMENT_UPDATE;
         segments[i] = SegmentDisplayMedium();
         segments[i].init(tft, xPos, y, fg, bg);
         xPos = xPos + (SEGMENT_WIDTH + digitOffset[i]);
     }
 }
 
-int ClockDisplayMedium::update() {
+int ClockDisplayMedium::invalidate() {
+    for (int i = 0; i < digits; i++) {
+        segments[i].invalidate();
+    }
+}
+
+int ClockDisplayMedium::draw() {
     int count = 0;
     for (int i = 0; i < digits; i++) {
-        if (values[i] != currentValues[i]) {
-            currentValues[i] = values[i];
-            segments[i].drawSegment(currentValues[i]);
-            count++;
-        }
+        count = count + segments[i].draw();
     }
     return count;
 }
 
-void ClockDisplayMedium::setTFT(TFT_eSPI tft) {
-    _tft = tft;
+void ClockDisplayMedium::setFgColor(int c) {
+    for (int i = 0; i < digits; i++) {
+        segments[i].setFgColor(c);
+    }
 }
 
-TFT_eSPI ClockDisplayMedium::getTFT() {
-    return _tft;
+void ClockDisplayMedium::setBgColor(int c) {
+    for (int i = 0; i < digits; i++) {
+        segments[i].setBgColor(c);
+    }
+}
+
+int ClockDisplayMedium::getFgColor() {
+    return segments[0].getFgColor();
+}
+
+int ClockDisplayMedium::getBgColor() {
+    return segments[0].getBgColor();
 }
 
 void ClockDisplayMedium::setValue(int pos, int val) {
     if ((pos >= 0) && (pos < digits)) {
-        values[pos] = val;
+        segments[pos].setValue(val);
     }
 }
 
 int ClockDisplayMedium::getValue(int pos) {
     if ((pos >= 0) && (pos < digits)) {
-        return values[pos];
+        return segments[pos].getValue();
     }
     return -1;
 }
 
 bool ClockDisplayMedium::setColon(int pos, bool val) {
     if ((pos >= 0) && (pos < digits)) {
-        values[pos] = val ? SEGMENT_COLON_ON : SEGMENT_COLON_OFF;
-        return !val;
+        segments[pos].setValue(val ? SEGMENT_COLON_ON : SEGMENT_COLON_OFF);
     }
     return false;
 }
 
 void SegmentDisplayMedium::init(TFT_eSPI tft, int x, int y, int fg, int bg) {
-    setTFT(tft);
+    _tft = tft;
+    setValue(SEGMENT_UNDEFINED);
     setFgColor(fg);
     setBgColor(bg);
     setPosition(x, y);
@@ -119,8 +127,12 @@ void SegmentDisplayMedium::drawSegmentInternal(int mask) {
     _tft.drawXBitmap(xPos + SEG_M_7_X, yPos + SEG_M_7_Y, SEG_M_7_bits, SEG_M_7_width, SEG_M_7_height, ((mask & 0x40) != 0) ? fgColor : bgColor);
 }
 
-void SegmentDisplayMedium::drawSegment(int value) {
-    switch (value) {
+int SegmentDisplayMedium::draw() {
+    if ((segValue == segValueCurrent) || (segValue == SEGMENT_UNDEFINED)) {
+        return 0;
+    }
+    segValueCurrent = segValue;
+    switch (segValue) {
     case SEGMENT_COLON_ON:
         _tft.drawXBitmap(xPos + SEG_M_8_X, yPos + SEG_M_8_Y, SEG_M_8_bits, SEG_M_8_width, SEG_M_8_height, fgColor);
         break;
@@ -131,30 +143,35 @@ void SegmentDisplayMedium::drawSegment(int value) {
         drawSegmentInternal(0);
         break;
     default:
-        if ((value >= 0) && (value < SEVEN_SEG_MAP_MAX)) {
-            drawSegmentInternal(sevenSegmentMap[value]);
+        if ((segValue >= 0) && (segValue < SEVEN_SEG_MAP_MAX)) {
+            drawSegmentInternal(sevenSegmentMap[segValue]);
         } else {
             drawSegmentInternal(SEVEN_SEG_MAP_ERR);
         }
     }
+    return 1;
 }
 
-void SegmentDisplayMedium::setTFT(TFT_eSPI tft) {
-    _tft = tft;
+int SegmentDisplayMedium::invalidate() {
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
-TFT_eSPI SegmentDisplayMedium::getTFT() {
-    return _tft;
+void SegmentDisplayMedium::setValue(int val) {
+    segValue = val;
 }
 
-int SegmentDisplayMedium::setFgColor(int color) {
+int SegmentDisplayMedium::getValue() {
+    return segValue;
+}
+
+void SegmentDisplayMedium::setFgColor(int color) {
     fgColor = color;
-    return getFgColor();
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
-int SegmentDisplayMedium::setBgColor(int color) {
+void SegmentDisplayMedium::setBgColor(int color) {
     bgColor = color;
-    return getBgColor();
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
 int SegmentDisplayMedium::getFgColor() {
@@ -176,6 +193,7 @@ int SegmentDisplayMedium::getYPos() {
 void SegmentDisplayMedium::setPosition(int x, int y) {
     xPos = x;
     yPos = y;
+    segValueCurrent = SEGMENT_UPDATE;
 }
 
 #endif

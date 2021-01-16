@@ -114,8 +114,6 @@ const unsigned char SEG_S_8_bits[] = {
     0x7c, 0x00, 0xfe, 0x00, 0xff, 0x01, 0xff, 0x01, 0xff, 0x01, 0xff, 0x01,
     0xfe, 0x00, 0x7c, 0x00};
 
-void drawSegmentSmall(TFT_eSPI tft, int x, int y, int value, int fg, int bg);
-void drawColonSmall(TFT_eSPI tft, int x, int y, bool value, int fg, int bg);
 #define SEGMENT_COUNT 5
 #define SEGMENT_UNDEFINED -2
 #define SEGMENT_UPDATE -1
@@ -127,6 +125,8 @@ void drawColonSmall(TFT_eSPI tft, int x, int y, bool value, int fg, int bg);
 
 class SegmentDisplaySmall {
 private:
+    int segValue;
+    int segValueCurrent;
     int fgColor = TFT_BLACK;
     int bgColor = TFT_GREEN;
     int xPos = 0;
@@ -136,25 +136,27 @@ private:
 public:
     SegmentDisplaySmall();
     ~SegmentDisplaySmall();
-    void init(TFT_eSPI tft, int x, int y, int fg, int bg);
-    void drawSegment(int value);
 
-    TFT_eSPI getTFT();
+    void init(TFT_eSPI tft, int x, int y, int fg, int bg);
+    int draw();
+    int invalidate();
+
+    int getValue();
+    void setValue(int value);
+
     int getFgColor();
+    void setFgColor(int color);
+
     int getBgColor();
+    void setBgColor(int color);
+
     int getXPos();
     int getYPos();
-
-    void setTFT(TFT_eSPI tft);
-    int setFgColor(int color);
-    int setBgColor(int color);
     void setPosition(int x, int y);
 };
 
 class ClockDisplaySmall {
 private:
-    int values[SEGMENT_COUNT];
-    int currentValues[SEGMENT_COUNT];
     SegmentDisplaySmall segments[SEGMENT_COUNT];
     int digits = 0;
     int digitOffset = 0;
@@ -162,11 +164,19 @@ private:
 public:
     ClockDisplaySmall();
     ~ClockDisplaySmall();
+
     void init(TFT_eSPI tft, int x, int y, int fg, int bg, int digitCount, const int digitOffset[]);
-    void setTFT(TFT_eSPI tft);
-    TFT_eSPI getTFT();
-    int update();
-    void setValue(int pos, int val);
+    int draw();
+    int invalidate();
+
+    int getFgColor();
+    void setFgColor(int fgColor);
+
+    int getBgColor();
+    void setBgColor(int bgColor);
+
     int getValue(int pos);
+    void setValue(int pos, int val);
+
     bool setColon(int pos, bool val);
 };

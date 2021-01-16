@@ -148,6 +148,8 @@ const unsigned char SEG_M_8_bits[] = {
 
 class SegmentDisplayMedium {
 private:
+    int segValue;
+    int segValueCurrent;
     int fgColor = TFT_BLACK;
     int bgColor = TFT_GREEN;
     int xPos = 0;
@@ -157,25 +159,27 @@ private:
 public:
     SegmentDisplayMedium();
     ~SegmentDisplayMedium();
-    void init(TFT_eSPI tft, int x, int y, int fg, int bg);
-    void drawSegment(int value);
 
-    TFT_eSPI getTFT();
+    void init(TFT_eSPI tft, int x, int y, int fg, int bg);
+    int draw();
+    int invalidate();
+
+    int getValue();
+    void setValue(int value);
+
     int getFgColor();
+    void setFgColor(int color);
+
     int getBgColor();
+    void setBgColor(int color);
+
     int getXPos();
     int getYPos();
-
-    void setTFT(TFT_eSPI tft);
-    int setFgColor(int color);
-    int setBgColor(int color);
     void setPosition(int x, int y);
 };
 
 class ClockDisplayMedium {
 private:
-    int values[SEGMENT_COUNT];
-    int currentValues[SEGMENT_COUNT];
     SegmentDisplayMedium segments[SEGMENT_COUNT];
     int digits = 0;
     int digitOffset = 0;
@@ -183,11 +187,19 @@ private:
 public:
     ClockDisplayMedium();
     ~ClockDisplayMedium();
+
     void init(TFT_eSPI tft, int x, int y, int fg, int bg, int digitCount, const int digitOffset[]);
-    void setTFT(TFT_eSPI tft);
-    TFT_eSPI getTFT();
-    int update();
-    void setValue(int pos, int val);
+    int draw();
+    int invalidate();
+
+    int getFgColor();
+    void setFgColor(int fgColor);
+
+    int getBgColor();
+    void setBgColor(int bgColor);
+
     int getValue(int pos);
+    void setValue(int pos, int val);
+
     bool setColon(int pos, bool val);
 };
